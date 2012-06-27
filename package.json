@@ -1,7 +1,7 @@
 {
-  "name": "lock-file",
+  "name": "lockfile",
   "version": "0.0.2",
-  "main": "lock-file.js",
+  "main": "lockfile.js",
   "directories": {
     "test": "test"
   },
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/isaacs/lock-file"
+    "url": "git://github.com/isaacs/lockfile"
   },
   "keywords": [
     "lockfile",
