@@ -1,0 +1,29 @@
+{
+  "name": "lock-file",
+  "version": "0.0.0",
+  "main": "lock-file.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "tap": "~0.2.5"
+  },
+  "scripts": {
+    "test": "tap test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/isaacs/lock-file"
+  },
+  "keywords": [
+    "lockfile",
+    "lock",
+    "file",
+    "fs",
+    "O_EXCL"
+  ],
+  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
+  "license": "BSD",
+  "description": "A very polite lock file utility, which endeavors to not litter, and to wait patiently for others."
+}
