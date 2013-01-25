@@ -172,15 +172,17 @@ function notStale (er, path, opts, cb) {
 
   // wait for some ms for the lock to clear
   var start = Date.now()
+  var end = start + opts.wait
 
-  var retried = false
   function retry () {
-    if (retried) return
-    retried = true
+    var now = Date.now()
+    if (now > end)
+      return
+
     // maybe already closed.
     try { watcher.close() } catch (e) {}
     clearTimeout(timer)
-    var newWait = Date.now() - start
+    var newWait = end - now
     var opts_ = Object.create(opts, { wait: { value: newWait }})
     exports.lock(path, opts_, cb)
   }
