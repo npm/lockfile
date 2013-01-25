@@ -33,20 +33,21 @@ process.on('uncaughtException', function H (er) {
 
 exports.unlock = function (path, cb) {
   // best-effort.  unlocking an already-unlocked lock is a noop
-  fs.unlink(path, function (unlinkEr) {
-    if (!hasOwnProperty(locks, path)) return cb()
-    fs.close(locks[path], function (closeEr) {
-      delete locks[path]
-      cb()
-    })
-  })
+  if (hasOwnProperty(locks, path))
+    fs.close(locks[path], unlink)
+  else
+    unlink()
+
+  function unlink () {
+    delete locks[path]
+    fs.unlink(path, function (unlinkEr) { cb() })
+  }
 }
 
 exports.unlockSync = function (path) {
-  try { fs.unlinkSync(path) } catch (er) {}
-  if (!hasOwnProperty(locks, path)) return
   // best-effort.  unlocking an already-unlocked lock is a noop
-  try { fs.close(locks[path]) } catch (er) {}
+  try { fs.closeSync(locks[path]) } catch (er) {}
+  try { fs.unlinkSync(path) } catch (er) {}
   delete locks[path]
 }
 
