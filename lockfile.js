@@ -166,8 +166,8 @@ exports.lock = function (path, opts, cb) {
 }
 
 function notStale (er, path, opts, cb) {
+  // if we can't wait, then just call it a failure
   if (typeof opts.wait !== 'number' || opts.wait <= 0)
-    // failed to lock!
     return cb(er)
 
   // wait for some ms for the lock to clear
