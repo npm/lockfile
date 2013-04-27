@@ -141,15 +141,15 @@ exports.lock = function (path, opts, cb) {
     if (er.code !== 'EEXIST') return cb(er)
 
     // someone's got this one.  see if it's valid.
-    if (opts.stale) fs.stat(path, function (er, st) {
-      if (er) {
-        if (er.code === 'ENOENT') {
+    if (opts.stale) fs.stat(path, function (statEr, st) {
+      if (statEr) {
+        if (statEr.code === 'ENOENT') {
           // expired already!
           var opts_ = Object.create(opts, { stale: { value: false }})
           exports.lock(path, opts_, cb)
           return
         }
-        return cb(er)
+        return cb(statEr)
       }
 
       var age = Date.now() - st.ctime.getTime()
