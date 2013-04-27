@@ -200,7 +200,19 @@ exports.lockSync = function (path, opts) {
 
     if (opts.stale) {
       var st = fs.statSync(path)
-      var age = Date.now() - st.ctime.getTime()
+      var ct = st.ctime.getTime()
+      if (!(ct % 1000) && (opts.stale % 1000)) {
+        // probably don't have subsecond resolution.
+        // round up the staleness indicator.
+        // Yes, this will be wrong 1/1000 times on platforms
+        // with subsecond stat precision, but that's acceptable
+        // in exchange for not mistakenly removing locks on
+        // most other systems.
+        console.error('1bump up stale', opts.stale)
+        opts.stale = 1000 * Math.ceil(opts.stale / 1000)
+        console.error('2bump up stale', opts.stale)
+      }
+      var age = Date.now() - ct
       if (age > opts.stale) {
         exports.unlockSync(path)
         return exports.lockSync(path, opts)

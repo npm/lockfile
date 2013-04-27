@@ -127,7 +127,7 @@ test('staleness test', function (t) {
     if (er) throw er
 
     var opts = { stale: 1 }
-    setTimeout(next, 10)
+    setTimeout(next, 1000)
     function next () {
       lockFile.check('stale-lock', opts, function (er, locked) {
         if (er) throw er
@@ -147,7 +147,7 @@ test('staleness test', function (t) {
 test('staleness sync test', function (t) {
   var opts = { stale: 1 }
   lockFile.lockSync('stale-lock')
-  setTimeout(next, 10)
+  setTimeout(next, 1000)
   function next () {
     var locked
     locked = lockFile.checkSync('stale-lock', opts)
