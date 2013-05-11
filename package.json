@@ -1,6 +1,6 @@
 {
   "name": "lockfile",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "main": "lockfile.js",
   "directories": {
     "test": "test"
