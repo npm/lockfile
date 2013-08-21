@@ -32,7 +32,7 @@ process.on('exit', function () {
 
 // XXX https://github.com/joyent/node/issues/3555
 // Remove when node 0.8 is deprecated.
-if (/^v0\.[0-8]/.test(process.version)) {
+if (/^v0\.[0-8]\./.test(process.version)) {
   debug('uncaughtException, version = %s', process.version)
   process.on('uncaughtException', function H (er) {
     debug('uncaughtException')
