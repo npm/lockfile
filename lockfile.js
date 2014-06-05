@@ -241,7 +241,7 @@ function notStale (er, path, opts, cb) {
     exports.lock(path, newOpts, cb)
   }
 
-  var timer = setTimeout(retry, 100)
+  var timer = setTimeout(retry, opts.pollPeriod || 100)
 }
 
 exports.lockSync = function (path, opts) {
