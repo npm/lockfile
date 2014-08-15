@@ -7,9 +7,9 @@ if (process.version.match(/^v0\.[0-6]/)) {
 }
 
 var os = require('os')
-var filetime = 'ctime'
+exports.filetime = 'ctime'
 if (os.platform() == "win32") {
-  filetime = 'mtime'
+  exports.filetime = 'mtime'
 }
 
 var debug
@@ -92,7 +92,7 @@ exports.check = function (path, opts, cb) {
       })
 
       fs.close(fd, function (er) {
-        var age = Date.now() - st[filetime].getTime()
+        var age = Date.now() - st[exports.filetime].getTime()
         return cb(er, age <= opts.stale)
       })
     })
@@ -125,7 +125,7 @@ exports.checkSync = function (path, opts) {
     } finally {
       fs.closeSync(fd)
     }
-    var age = Date.now() - st[filetime].getTime()
+    var age = Date.now() - st[exports.filetime].getTime()
     return (age <= opts.stale)
   }
 }
@@ -167,30 +167,57 @@ exports.lock = function (path, opts, cb) {
     if (er.code !== 'EEXIST') return cb(er)
 
     // someone's got this one.  see if it's valid.
-    if (opts.stale) fs.stat(path, function (statEr, st) {
-      if (statEr) {
-        if (statEr.code === 'ENOENT') {
-          // expired already!
-          var opts_ = Object.create(opts, { stale: { value: false }})
-          debug('lock stale enoent retry', path, opts_)
-          exports.lock(path, opts_, cb)
-          return
-        }
-        return cb(statEr)
-      }
+    if (!opts.stale) return notStale(er, path, opts, cb)
 
-      var age = Date.now() - st[filetime].getTime()
-      if (age > opts.stale) {
-        debug('lock stale', path, opts_)
-        exports.unlock(path, function (er) {
-          if (er) return cb(er)
-          var opts_ = Object.create(opts, { stale: { value: false }})
-          debug('lock stale retry', path, opts_)
-          exports.lock(path, opts_, cb)
+    return maybeStale(er, path, opts, false, cb)
+  })
+}
+
+
+// Staleness checking algorithm
+// 1. acquire $lock, fail
+// 2. stat $lock, find that it is stale
+// 3. acquire $lock.STALE
+// 4. stat $lock, assert that it is still stale
+// 5. unlink $lock
+// 6. link $lock.STALE $lock
+// 7. unlink $lock.STALE
+// On any failure, clean up whatever we've done, and raise the error.
+function maybeStale (originalEr, path, opts, hasStaleLock, cb) {
+  fs.stat(path, function (statEr, st) {
+    if (statEr) {
+      if (statEr.code === 'ENOENT') {
+        // expired already!
+        var opts_ = Object.create(opts, { stale: { value: false }})
+        debug('lock stale enoent retry', path, opts_)
+        exports.lock(path, opts_, cb)
+        return
+      }
+      return cb(statEr)
+    }
+
+    var age = Date.now() - st[exports.filetime].getTime()
+    if (age <= opts.stale) return notStale(originalEr, path, opts, cb)
+
+    debug('lock stale', path, opts_)
+    if (hasStaleLock) {
+      exports.unlock(path, function (er) {
+        if (er) return cb(er)
+        debug('lock stale retry', path, opts)
+        fs.link(path + '.STALE', path, function (er) {
+          fs.unlink(path + '.STALE', function () {
+            // best effort.  if the unlink fails, oh well.
+            cb(er)
+          })
         })
-      } else notStale(er, path, opts, cb)
-    })
-    else notStale(er, path, opts, cb)
+      })
+    } else {
+      debug('acquire .STALE file lock', opts)
+      exports.lock(path + '.STALE', opts, function (er) {
+        if (er) return cb(er)
+        maybeStale(originalEr, path, opts, true, cb)
+      })
+    }
   })
 }
 
@@ -236,7 +263,7 @@ exports.lockSync = function (path, opts) {
 
     if (opts.stale) {
       var st = fs.statSync(path)
-      var ct = st[filetime].getTime()
+      var ct = st[exports.filetime].getTime()
       if (!(ct % 1000) && (opts.stale % 1000)) {
         // probably don't have subsecond resolution.
         // round up the staleness indicator.
