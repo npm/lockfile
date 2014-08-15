@@ -132,7 +132,7 @@ exports.checkSync = function (path, opts) {
 
 
 
-var req = 0
+var req = 1
 exports.lock = function (path, opts, cb) {
   if (typeof opts === 'function') cb = opts, opts = {}
   opts.req = opts.req || req++
