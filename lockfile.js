@@ -141,10 +141,12 @@ exports.lock = function (path, opts, cb) {
 
   if (typeof opts.retries === 'number' && opts.retries > 0) {
     debug('has retries', opts.retries)
+    var retries = opts.retries
+    opts.retries = 0
     cb = (function (orig) { return function cb (er, fd) {
       debug('retry-mutated callback')
-      opts.retries -= 1
-      if (!er || opts.retries < 0) return orig(er, fd)
+      retries -= 1
+      if (!er || retries < 0) return orig(er, fd)
 
       debug('lock retry', path, opts)
 
