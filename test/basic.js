@@ -283,7 +283,7 @@ test('cleanup', function (t) {
   try { lockFile.unlockSync('retry-lock') } catch (er) {}
   try { lockFile.unlockSync('contentious-lock') } catch (er) {}
   try { lockFile.unlockSync('stale-wait-lock') } catch (er) {}
-  try { lockFile.unlockSync('stale-windows-lock') } catch (er) {}  
+  try { lockFile.unlockSync('stale-windows-lock') } catch (er) {}
   t.end()
 })
 
