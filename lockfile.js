@@ -137,17 +137,25 @@ exports.lock = function (path, opts, cb) {
   if (typeof opts === 'function') cb = opts, opts = {}
   opts.req = opts.req || req++
   debug('lock', path, opts)
+  opts.start = opts.start || Date.now()
 
   if (typeof opts.retries === 'number' && opts.retries > 0) {
-    cb = (function (orig) { return function (er, fd) {
-      if (!er) return orig(er, fd)
-      var newRT = opts.retries - 1
-      opts.retries = newRT
-      debug('lock retry', path, newRT)
-      if (opts.retryWait) setTimeout(function() {
-        exports.lock(path, opts, orig)
-      }, opts.retryWait)
-      else exports.lock(path, opts, orig)
+    debug('has retries', opts.retries)
+    cb = (function (orig) { return function cb (er, fd) {
+      debug('retry-mutated callback')
+      opts.retries -= 1
+      if (!er || opts.retries < 0) return orig(er, fd)
+
+      debug('lock retry', path, opts)
+
+      if (opts.retryWait) setTimeout(retry, opts.retryWait)
+      else retry()
+
+      function retry () {
+        opts.start = Date.now()
+        debug('retrying', opts.start)
+        exports.lock(path, opts, cb)
+      }
     }})(cb)
   }
 
@@ -228,20 +236,22 @@ function notStale (er, path, opts, cb) {
   if (typeof opts.wait !== 'number' || opts.wait <= 0)
     return cb(er)
 
-  // console.error('wait', path, opts.wait)
-  // wait for some ms for the lock to clear
-  var start = Date.now()
+  // poll for some ms for the lock to clear
+  var now = Date.now()
+  var start = opts.start || now
   var end = start + opts.wait
 
-  function retry () {
-    debug('notStale retry', path, opts)
-    var now = Date.now()
-    var newWait = end - now
-    opts.wait = newWait
+  if (end <= now)
+    return cb(er)
+
+  debug('now=%d, wait until %d (delta=%d)', start, end, end-start)
+  var wait = Math.min(end - start, opts.pollPeriod || 100)
+  var timer = setTimeout(poll, wait)
+
+  function poll () {
+    debug('notStale, polling', path, opts)
     exports.lock(path, opts, cb)
   }
-
-  var timer = setTimeout(retry, opts.pollPeriod || 100)
 }
 
 exports.lockSync = function (path, opts) {
