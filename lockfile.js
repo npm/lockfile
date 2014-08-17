@@ -142,12 +142,12 @@ exports.lock = function (path, opts, cb) {
     cb = (function (orig) { return function (er, fd) {
       if (!er) return orig(er, fd)
       var newRT = opts.retries - 1
-      opts_ = Object.create(opts, { retries: { value: newRT }})
+      opts.retries = newRT
       debug('lock retry', path, newRT)
       if (opts.retryWait) setTimeout(function() {
-        exports.lock(path, opts_, orig)
+        exports.lock(path, opts, orig)
       }, opts.retryWait)
-      else exports.lock(path, opts_, orig)
+      else exports.lock(path, opts, orig)
     }})(cb)
   }
 
@@ -188,9 +188,9 @@ function maybeStale (originalEr, path, opts, hasStaleLock, cb) {
     if (statEr) {
       if (statEr.code === 'ENOENT') {
         // expired already!
-        var opts_ = Object.create(opts, { stale: { value: false }})
-        debug('lock stale enoent retry', path, opts_)
-        exports.lock(path, opts_, cb)
+        opts.stale = false
+        debug('lock stale enoent retry', path, opts)
+        exports.lock(path, opts, cb)
         return
       }
       return cb(statEr)
@@ -199,7 +199,7 @@ function maybeStale (originalEr, path, opts, hasStaleLock, cb) {
     var age = Date.now() - st[exports.filetime].getTime()
     if (age <= opts.stale) return notStale(originalEr, path, opts, cb)
 
-    debug('lock stale', path, opts_)
+    debug('lock stale', path, opts)
     if (hasStaleLock) {
       exports.unlock(path, function (er) {
         if (er) return cb(er)
@@ -237,8 +237,8 @@ function notStale (er, path, opts, cb) {
     debug('notStale retry', path, opts)
     var now = Date.now()
     var newWait = end - now
-    var newOpts = Object.create(opts, { wait: { value: newWait }})
-    exports.lock(path, newOpts, cb)
+    opts.wait = newWait
+    exports.lock(path, opts, cb)
   }
 
   var timer = setTimeout(retry, opts.pollPeriod || 100)
@@ -291,8 +291,8 @@ function retryThrow (path, opts, er) {
   if (typeof opts.retries === 'number' && opts.retries > 0) {
     var newRT = opts.retries - 1
     debug('retryThrow', path, opts, newRT)
-    var opts_ = Object.create(opts, { retries: { value: newRT }})
-    return exports.lockSync(path, opts_)
+    opts.retries = newRT
+    return exports.lockSync(path, opts)
   }
   throw er
 }
