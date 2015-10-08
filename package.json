@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/isaacs/lockfile"
+    "url": "https://github.com/npm/lockfile.git"
   },
   "keywords": [
     "lockfile",
