@@ -5,7 +5,9 @@
   "directories": {
     "test": "test"
   },
-  "dependencies": {},
+  "dependencies": {
+    "signal-exit": "^3.0.2"
+  },
   "devDependencies": {
     "tap": "^7.1.2",
     "touch": "0"

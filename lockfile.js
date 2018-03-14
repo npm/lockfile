@@ -30,7 +30,8 @@ function hasOwnProperty (obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop)
 }
 
-process.on('exit', function () {
+var onExit = require('signal-exit')
+onExit(function () {
   debug('exit listener')
   // cleanup
   Object.keys(locks).forEach(exports.unlockSync)
