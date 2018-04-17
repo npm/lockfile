@@ -13,7 +13,7 @@
     "touch": "0"
   },
   "scripts": {
-    "test": "tap test/*.js --cov",
+    "test": "tap test/*.js --cov -J",
     "changelog": "bash gen-changelog.sh",
     "postversion": "npm run changelog && git add CHANGELOG.md && git commit -m 'update changelog - '${npm_package_version}"
   },
