@@ -6,5 +6,5 @@ if (/0\.(10|8)/.test(process.version)) {
     t.equal(code, 0, 'did not throw')
   })
 }
-var lf = require('lockfile')
+var lf = require('../lockfile.js')
 lf.unlock('no-file-no-cb')
